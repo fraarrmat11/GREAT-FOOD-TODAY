@@ -7,11 +7,12 @@ Almost every domain in Good Food Today (Auth, Post, Place, Review, Comment, Like
 - Add a `User` JPA entity: `id`, `email` (unique, not null, immutable), `name` (not null), `avatarUrl` (nullable), `department` (nullable), `createdAt`.
 - Add a Spring Data JPA `UserRepository`.
 - Expose REST endpoints:
+  - `POST /api/users` — create a user profile (internal use only; issue #1 defines no client-facing signup flow, but a real HTTP path is needed to enforce and test the email/name validation rules until Auth (issue #2) creates users on first login).
   - `GET /api/users/{id}` — get a user profile.
   - `GET /api/users/me` — profile of the authenticated user. Placeholder until Auth (issue #2) exists; the "current user" is resolved from a temporary stand-in until the security context is available.
   - `PUT /api/users/{id}` — edit an own profile (`name`, `avatarUrl`, `department` only).
-- Add request/response DTOs so `email`, `id`, and `createdAt` cannot be mutated through the update endpoint.
-- Add bean-validation rules: valid email format, non-empty `name`; `email` is unique and rejected on change.
+- Add request/response DTOs so `email`, `id`, and `createdAt` cannot be mutated through the update endpoint, and so creation only accepts `email`, `name`, `avatarUrl`, `department`.
+- Add bean-validation rules: valid email format, non-empty `name` on creation; non-empty `name` on update; `email` is unique on creation and rejected on change.
 - Add the `spring-boot-starter-validation` dependency (not yet on the classpath).
 - Add a basic repository test (save then retrieve a user).
 

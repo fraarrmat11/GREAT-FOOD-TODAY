@@ -22,8 +22,8 @@ Introduce one small component (a "current user" resolver) that all endpoints use
 - **Alternatives:** Return 501 for `/me` and skip ownership enforcement — rejected because the ownership acceptance criterion becomes untestable and the seam still has to be built later. Hardcode a user — rejected as not meaningful or testable.
 
 ### Dedicated request/response DTOs (no entity binding)
-The update endpoint binds to a request object exposing only `name`, `avatarUrl`, and `department`. Responses use a separate response object. The JPA entity is never bound directly to the HTTP body.
-- **Why:** Makes `email`/`id`/`createdAt` immutability structural (the fields cannot be set from the body) and avoids a mass-assignment vulnerability (OWASP API6/A08). It also decouples the wire contract from the schema.
+The create endpoint binds to a request object exposing `email`, `name`, `avatarUrl`, `department`. The update endpoint binds to a separate request object exposing only `name`, `avatarUrl`, and `department` — no `email` field at all. Responses use a separate response object. The JPA entity is never bound directly to the HTTP body.
+- **Why:** Makes `email`/`id`/`createdAt` immutability on update structural (the fields cannot be set from the update body) and avoids a mass-assignment vulnerability (OWASP API6/A08). It also decouples the wire contract from the schema and gives email/name validation a real HTTP entry point (creation) without weakening update immutability.
 - **Alternative:** Bind the entity and ignore disallowed fields — rejected as error-prone and insecure.
 
 ### Email uniqueness enforced at the database and reported by the service
