@@ -2,10 +2,20 @@ spring:
   application:
     name: backend
   datasource:
-    url: jdbc:mysql://localhost:3306/goodfoodtoday
-    username: root
-    password: root
+    url: jdbc:h2:mem:goodfoodtoday
+    username: sa
+    password:
   jpa:
     hibernate:
       ddl-auto: update
+  h2:
+    console:
+      enabled: true
     show-sql: true
+
+app:
+  security:
+    issuer: ${JWT_ISSUER:http://localhost:8080}
+    private-key: ${JWT_PRIVATE_KEY:}
+    public-key: ${JWT_PUBLIC_KEY:}
+    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT15M}

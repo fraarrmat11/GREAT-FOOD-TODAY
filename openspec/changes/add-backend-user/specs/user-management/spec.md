@@ -17,6 +17,14 @@ The system SHALL persist a user profile consisting of a system-assigned identifi
 - **WHEN** a user profile is saved without an avatar URL or department
 - **THEN** the profile is stored successfully with those fields empty
 
+### Requirement: Create a user profile
+
+The system SHALL expose `POST /api/users` that creates a user profile from an email and a name, with an optional avatar URL and department. This endpoint exists for internal use until the authentication capability (which will create users on first login) is available; it is the only entry point that accepts an email.
+
+#### Scenario: Successful creation
+- **WHEN** a client requests `POST /api/users` with a valid email and a non-empty name
+- **THEN** the response status is 201 and the body contains the created profile with a system-assigned identifier and creation timestamp
+
 ### Requirement: Retrieve a user profile by identifier
 
 The system SHALL expose `GET /api/users/{id}` that returns the profile for the given identifier.
@@ -62,8 +70,8 @@ The system SHALL expose `PUT /api/users/{id}` that updates only the name, avatar
 The system SHALL enforce that each user's email is unique across all users and cannot be changed after the profile is created.
 
 #### Scenario: Duplicate email rejected
-- **WHEN** a user profile is created with an email that already belongs to another user
-- **THEN** the profile is not stored and the operation is rejected
+- **WHEN** a client requests `POST /api/users` with an email that already belongs to another user
+- **THEN** the response status is 409 and the profile is not stored
 
 #### Scenario: Email cannot be changed on update
 - **WHEN** the current user submits `PUT /api/users/{id}` including a different email value
@@ -71,12 +79,16 @@ The system SHALL enforce that each user's email is unique across all users and c
 
 ### Requirement: Profile input validation
 
-The system SHALL reject profile creation or update requests whose email is not a syntactically valid address or whose name is empty or blank.
+The system SHALL reject profile creation or update requests whose email (when submitted) is not a syntactically valid address or whose name is empty or blank.
 
-#### Scenario: Invalid email format
-- **WHEN** a profile is submitted with an email that is not a valid address
+#### Scenario: Invalid email format on creation
+- **WHEN** a client requests `POST /api/users` with an email that is not a valid address
 - **THEN** the response status is 400 and the profile is not stored
 
-#### Scenario: Blank name
-- **WHEN** a profile is submitted with an empty or whitespace-only name
+#### Scenario: Blank name on creation
+- **WHEN** a client requests `POST /api/users` with an empty or whitespace-only name
+- **THEN** the response status is 400 and the profile is not stored
+
+#### Scenario: Blank name on update
+- **WHEN** the current user requests `PUT /api/users/{id}` with an empty or whitespace-only name
 - **THEN** the response status is 400 and the profile is not stored
