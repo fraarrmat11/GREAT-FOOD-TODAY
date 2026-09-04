@@ -77,6 +77,43 @@ class AuthenticationIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void placeEndpointsRejectMissingToken() throws Exception {
+        mockMvc.perform(get("/api/places"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/places")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"La Huerta\",\"address\":\"Calle Mayor 1\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void placeCreationUsesJwtIdentityInsteadOfHeader() throws Exception {
+        String email = "jwt-place@example.com";
+        String registrationResponse = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"name\":\"Place User\",\"password\":\"secret\"}"
+                                .formatted(email)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        long userId = objectMapper.readTree(registrationResponse).get("id").asLong();
+        String loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"password\":\"secret\"}".formatted(email)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String token = objectMapper.readTree(loginResponse).get("accessToken").asText();
+
+        mockMvc.perform(post("/api/places")
+                        .header("Authorization", "Bearer " + token)
+                        .header("X-User-Id", "999999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"La Huerta\",\"address\":\"Calle Mayor 1\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.createdBy.id").value(userId));
+    }
+
         @Test
         void protectedEndpointRejectsMalformedToken() throws Exception {
                 mockMvc.perform(get("/api/users/me")
